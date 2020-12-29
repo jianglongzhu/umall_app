@@ -63,35 +63,59 @@ export default {
     cancel() {
       this.$emit("cancel");
     },
-    add(){
-      reqManAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("添加成功");
-          this.empty();
-          this.$emit("init");
-        } else {
-          errAlert(res.data.msg);
+    // 验证表单
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.roleid == "") {
+          errAlert("请选择所属角色");
+          return;
         }
+
+        if (this.form.username == "") {
+          errAlert("请填写用户名");
+          return;
+        }
+
+        if (this.form.password == "") {
+          errAlert("请填写密码");
+          return;
+        }
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        reqManAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("添加成功");
+            this.empty();
+            this.$emit("init");
+          } else {
+            errAlert(res.data.msg);
+          }
+        });
       });
     },
     getinfo(id) {
       reqManInfo(id).then((res) => {
         if (res.data.code == 200) {
           // 清空密码
-          res.data.list.password=''
+          res.data.list.password = "";
           this.form = res.data.list;
           this.form.uid = id;
         }
       });
     },
     updata() {
-      reqManUpdata(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.$emit("init");
-        }
+      this.check().then(() => {
+        reqManUpdata(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.$emit("init");
+          }
+        });
       });
     },
   },

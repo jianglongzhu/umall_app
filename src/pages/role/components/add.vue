@@ -42,7 +42,7 @@
 
 <script>
 import { reqRoleAdd, reqRoleInfo, reqRoleUpdata } from "../../../utils/http";
-import { infoAlert, successAlert } from "../../../utils/alert";
+import { infoAlert, successAlert, errAlert } from "../../../utils/alert";
 export default {
   props: ["addcon", "rolePer"],
   data() {
@@ -61,7 +61,7 @@ export default {
     empty() {
       this.form = {
         rolename: "",
-        menus: "",
+        menus: [],
         status: "",
       };
     },
@@ -69,18 +69,34 @@ export default {
     setCK(arr) {
       this.form = this.$refs.tree.setCheckedKeys(arr);
     },
+    // 表单验证
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.rolename == "") {
+          errAlert("请填写角色名称");
+          return;
+        }
+        if (this.$refs.tree.getCheckedKeys().length < 1) {
+          errAlert("请选择角色权限");
+          return;
+        }
+        resolve();
+      });
+    },
     // 添加
     add() {
-      this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
-      reqRoleAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          // 清空选中的角色权限
-          this.setCK([]);
-          this.$emit("cancel");
-          successAlert("添加成功");
-          this.empty();
-          this.$emit("init");
-        }
+      this.check().then(() => {
+        this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
+        reqRoleAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            // 清空选中的角色权限
+            this.setCK([]);
+            this.$emit("cancel");
+            successAlert("添加成功");
+            this.empty();
+            this.$emit("init");
+          }
+        });
       });
     },
     cancel() {
@@ -99,14 +115,16 @@ export default {
     },
     // 修改
     updata() {
-      this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
-      reqRoleUpdata(this.form).then((res)=>{
-         if(res.data.code==200){
-             this.cancel();
-             successAlert("修改成功");
-             this.$emit("init");
-         }
-      })
+      this.check().then(() => {
+        this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
+        reqRoleUpdata(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.$emit("init");
+          }
+        });
+      });
     },
   },
 };

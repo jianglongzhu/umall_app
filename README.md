@@ -1,21 +1,19 @@
 # myproject
 
-> A Vue.js project
+| 模块       | 完成程度                           |
+| ---------- | ---------------------------------- |
+| 菜单管理   | 完成                               |
+| 角色管理   | 完成                               |
+| 管理员管理 | 完成                               |
+| 商品分类   | 完成                               |
+| 商品规格   | 完成                               |
+| 商品管理   | 完成                               |
+| 会员管理   | 完成                               |
+| 轮播图管理 | 完成                               |
+| 秒杀管理   | 完成                               |
+| 验证       | 菜单管理，角色管理，管理员管理完成 |
+| 权限       | 未完成                             |
+| 动态侧边栏 | 未完成                             |
+| 图表       | 未完成                             |
+|            |                                    |
 
-## Build Setup
-
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).

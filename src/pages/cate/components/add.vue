@@ -3,9 +3,9 @@
     <el-dialog :title="addcon.isAdd?'商品分类添加':'商品分类编辑'" :visible.sync="addcon.isshow">
       <el-form :model="form">
         <el-form-item label="上级分类" :label-width="formLabelWidth">
-          <el-select v-model="form.pid" >
-            <el-option label="---请选择---" value="" disabled></el-option>
-            <el-option label="顶级分类" :value="0" ></el-option>
+          <el-select v-model="form.pid">
+            <el-option label="---请选择---" value disabled></el-option>
+            <el-option label="顶级分类" :value="0"></el-option>
             <div v-for="item in list" :key="item.id">
               <el-option :label="item.catename" :value="item.id"></el-option>
               <el-option v-for="i in item.children" :key="i.id" :label="i.catename" :value="i.id"></el-option>
@@ -51,8 +51,8 @@
 <script>
 import { routePath } from "../../../router";
 import { reqGoodAdd, reqGoodInfo, reqGoodUpdata } from "../../../utils/http";
-import { successAlert,infoAlert,errAlert } from "../../../utils/alert";
-import {mapActions,mapGetters}  from "vuex"
+import { successAlert, infoAlert, errAlert } from "../../../utils/alert";
+import { mapActions, mapGetters } from "vuex";
 export default {
   props: ["addcon"],
   data() {
@@ -72,29 +72,29 @@ export default {
       value: "100",
     };
   },
-  computed:{
+  computed: {
     // 获取列表数据
     ...mapGetters({
-      list:"cate/list"
-    })
+      list: "cate/list",
+    }),
   },
   methods: {
     // 请求列表数据
     ...mapActions({
-       reqlist:"cate/reqList"
+      reqlist: "cate/reqList",
     }),
     // 图片路径处理及图片大小处理
     beforeAvatarUpload(file) {
-      let index=file.name.lastIndexOf('.')
-      console.log(file)
-      let con=file.name.slice(index)
-      let arr=['.jpg','.gif','.jpeg','.png']
+      let index = file.name.lastIndexOf(".");
+      console.log(file);
+      let con = file.name.slice(index);
+      let arr = [".jpg", ".gif", ".jpeg", ".png"];
       // 1M=1024KB    1KB=1024B
-      if(!arr.includes(con)){
-        errAlert("请上传图片")
-        if(!file.size>=2*1024*1024){
-           errAlert("请上传小于2M的图片")
-           return;
+      if (!arr.includes(con)) {
+        errAlert("请上传图片");
+        if (!file.size >= 2 * 1024 * 1024) {
+          errAlert("请上传小于2M的图片");
+          return;
         }
         return;
       }
@@ -114,15 +114,16 @@ export default {
       }),
         (this.imageUrl = "http://localhost:3000null");
     },
+    
     //添加
     add() {
-      reqGoodAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert(res.data.msg);
-          this.empty();
-          this.reqlist();
-        }
+         reqGoodAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert(res.data.msg);
+            this.empty();
+            this.reqlist();
+          }
       });
     },
     //获取一条的信息

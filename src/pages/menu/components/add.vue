@@ -7,7 +7,7 @@
         </el-form-item>
         <el-form-item label="上级菜单" :label-width="formLabelWidth">
           <el-select v-model="form.pid" placeholder="请选择活动区域">
-              <el-option label="----请选择----" value=""  disabled></el-option>
+            <el-option label="----请选择----" value disabled></el-option>
             <el-option label="顶级菜单" :value="0"></el-option>
             <div v-for="item in list" :key="item.id">
               <el-option :label="item.title" :value="item.id"></el-option>
@@ -55,7 +55,7 @@
 <script>
 import { routePath } from "../../../router";
 import { reqMenuAdd, reqMenuInfo, reqMenuUpdate } from "../../../utils/http";
-import { successAlert } from "../../../utils/alert";
+import { successAlert, errAlert } from "../../../utils/alert";
 export default {
   props: ["addcon", "list"],
   data() {
@@ -82,7 +82,7 @@ export default {
     },
     empty() {
       this.form = {
-        pid: 0,
+        pid: " ",
         title: "",
         icon: "",
         type: 1,
@@ -90,14 +90,31 @@ export default {
         status: 2,
       };
     },
-    add() {
-      reqMenuAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert(res.data.msg);
-          this.empty();
-          this.$emit("init");
+    // 表单验证
+    check() {
+      return new Promise((resolve) => {
+        // 验证
+        if (this.form.title == "") {
+          errAlert("请填写菜单名称");
+          return;
         }
+        if (this.form.pid == "") {
+          errAlert("请选择上级菜单");
+          return;
+        }
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        reqMenuAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert(res.data.msg);
+            this.empty();
+            this.$emit("init");
+          }
+        });
       });
     },
     getInfo(id) {
@@ -109,12 +126,14 @@ export default {
       });
     },
     edit() {
-      reqMenuUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.$emit("init");
-        }
+      this.check().then(() => {
+        reqMenuUpdate(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.$emit("init");
+          }
+        });
       });
     },
   },
