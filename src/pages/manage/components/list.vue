@@ -42,18 +42,6 @@ export default {
   methods: {
     del(id) {
        Del(reqManDel,id,this)
-      /* isDel()
-        .then(() => {
-          reqManDel(id).then((res) => {
-            if (res.data.code == 200) {
-              successAlert("删除成功");
-              this.$emit("init");
-            }
-          });
-        })
-        .catch(() => {
-          infoAlert("已取消删除");
-        }); */
     },
     edit(id) {
       this.$emit("edit", id);

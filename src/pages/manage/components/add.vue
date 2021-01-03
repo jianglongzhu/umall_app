@@ -1,16 +1,16 @@
 <template>
   <div>
     <el-dialog :title="addcon.isAdd?'用户添加':'用户编辑'" :visible.sync="addcon.isshow">
-      <el-form :model="form">
-        <el-form-item label="所属角色" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="所属角色" :label-width="formLabelWidth" prop="roleid">
           <el-select v-model="form.roleid" placeholder="请选择">
             <el-option v-for="i in rolelist" :key="i.id" :label="i.rolename" :value="i.id"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="用户名" :label-width="formLabelWidth">
+        <el-form-item label="用户名" :label-width="formLabelWidth" prop="username">
           <el-input v-model="form.username" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="密码" :label-width="formLabelWidth">
+        <el-form-item label="密码" :label-width="formLabelWidth" :prop="addcon.isAdd?'password':''">
           <el-input placeholder="请输入密码" v-model="form.password" show-password></el-input>
         </el-form-item>
         <el-form-item label="状态" :label-width="formLabelWidth">
@@ -33,7 +33,6 @@
     </el-dialog>
   </div>
 </template>
-
 <script>
 import { reqManAdd, reqManInfo, reqManUpdata } from "../../../utils/http";
 import { successAlert, errAlert } from "../../../utils/alert";
@@ -49,6 +48,19 @@ export default {
       },
       formLabelWidth: "120px",
       value: "100",
+      rules: {
+        roleid: [
+          { required: true, message: "请选择所属角色", trigger: "change" },
+        ],
+        username: [
+          { required: true, message: "请输入用户名称", trigger: "blur" },
+         
+        ],
+        password: [
+          { required: true, message: "请输入用户密码", trigger: "blur" },
+        
+        ],
+      },
     };
   },
   methods: {
@@ -70,15 +82,15 @@ export default {
           errAlert("请选择所属角色");
           return;
         }
-
         if (this.form.username == "") {
           errAlert("请填写用户名");
           return;
         }
-
-        if (this.form.password == "") {
-          errAlert("请填写密码");
-          return;
+        if (this.addcon.isAdd == true) {
+          if (this.form.password == "") {
+            errAlert("请填写密码");
+            return;
+          }
         }
         resolve();
       });

@@ -1,8 +1,8 @@
 <template>
   <div>
     <el-dialog :title="addcon.isAdd?'规格添加':'规格编辑'" :visible.sync="addcon.isshow">
-      <el-form :model="form">
-        <el-form-item label="规格名称" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="规格名称" :label-width="formLabelWidth" prop="specsname">
           <el-input v-model="form.specsname" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="规格属性" :label-width="formLabelWidth">
@@ -18,7 +18,7 @@
           :key="item"
         >
           <div class="new">
-            <el-input class="newputs" :value="item" autocomplete="off"></el-input>
+            <el-input class="newputs" :value="item" autocomplete="off" disabled></el-input>
             <el-button type="danger" size="mini" @click="delAtt(index)">删除</el-button>
           </div>
         </el-form-item>
@@ -61,6 +61,11 @@ export default {
       arr: [],
       formLabelWidth: "120px",
       value: "100",
+        rules: {
+          specsname: [
+            { required: true, message: '请输入规格名称', trigger: 'blur' }
+          ],
+      }
     };
   },
   methods: {
@@ -76,6 +81,10 @@ export default {
         this.att = "";
         return;
       }
+      if (this.att === "") {
+        errAlert("请填写属性");
+        return;
+      }
       this.arr.push(this.att);
       this.att = "";
     },
@@ -89,23 +98,40 @@ export default {
         attrs: "",
         status: 1,
       };
+      this.arr=[]
     },
     cancel() {
       this.$emit("cancel");
     },
-    add() {
-      this.form.attrs = JSON.stringify(this.arr);
-      delete this.form["id"];
-      reqSpeAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("添加成功");
-          this.empty();
-          this.reqlist();
-          this.reqtotal();
-        } else {
-          errAlert(res.data.msg);
+    // 表单验证
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.specsname === "") {
+          errAlert("请输入规格名称");
+          return;
         }
+        if (this.arr.length == 0) {
+          errAlert("请填写规格属性");
+          return;
+        }
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        this.form.attrs = JSON.stringify(this.arr);
+        delete this.form["id"];
+        reqSpeAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("添加成功");
+            this.empty();
+            this.reqlist();
+            this.reqtotal();
+          } else {
+            errAlert(res.data.msg);
+          }
+        });
       });
     },
     getinfo(id) {
@@ -120,14 +146,16 @@ export default {
       });
     },
     updata() {
-      this.form.attrs = JSON.stringify(this.arr);
-      reqSpeUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.reqlist();
-          this.reqtotal();
-        }
+      this.check().then(() => {
+        this.form.attrs = JSON.stringify(this.arr);
+        reqSpeUpdate(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.reqlist();
+            this.reqtotal();
+          }
+        });
       });
     },
   },

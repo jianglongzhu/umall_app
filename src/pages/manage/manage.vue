@@ -54,7 +54,7 @@ export default {
       console.log(this.size, this.page);
       reqManList({ size: 3, page: this.page }).then((res) => {
         if (res.data.code == 200) {
-          /*
+            /*
             如果删除了最后一页的最后一条，那么当前页就会收到空数据；这个时候如果有上一页的话，就应该取上一页
            */
           if (res.data.list.length == 0 && this.page > 1) {

@@ -31,7 +31,6 @@ export default {
   methods: {
     add(){
       if(this.addcon.isAdd==false){
-         this.$refs.add.setCK([])
          this.$refs.add.empty();
       }
       this.addcon.isAdd=true;

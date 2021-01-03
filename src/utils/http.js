@@ -1,11 +1,21 @@
 import { data } from "autoprefixer"
 import axios from "axios"
 import qs from "qs"
+import { config } from "shelljs"
 import Vue from "vue"
-
+import router from "../router"
+import store from "../store/index"
 // 开发环境 ：8080
 let baseUrl = "/api"
 Vue.prototype.$pre = "http://localhost:3000"
+// 请求拦截
+axios.interceptors.request.use(config=>{
+    // 当不是登录的请求的时候,
+    if(config.url!==baseUrl+"api/userlogin"){
+        config.headers.authorization=store.state.list.token
+    }
+    return config;
+})
 
 // 响应拦截
 axios.interceptors.response.use(res => {
@@ -15,11 +25,17 @@ axios.interceptors.response.use(res => {
     }
 
     console.groupEnd();
-
     // 当请求列表的数据为空时，赋值为一个空数组
     if (!res.data.list) {
         res.data.list = [];
     }
+    // 登录过期统一处理
+    // if(res.data.msg="登录已过期或访问权限受限"){
+    //     //  清除用户信息
+    //     store.dispatch("changelist",{})
+    //     // 跳到登录页面
+    //     router.push("/login")
+    // }
     return res
 })
 
@@ -494,3 +510,13 @@ export let reqSekillDel=(id)=>{
     })
 }
 /* -------------------秒杀活动结束--------------------- */
+
+
+// 登录
+export let reqLogin=(user)=>{
+    return axios({
+        url:baseUrl+"/api/userlogin",
+        method:"post",
+        data:qs.stringify(user)
+    })
+}

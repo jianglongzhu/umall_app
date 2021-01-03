@@ -1,9 +1,8 @@
 <template>
   <div class="box">
     <el-dialog :title="addcon.isAdd?'商品添加':'商品修改'" :visible.sync="addcon.isshow" @opened="opened">
-      {{form}}
-      <el-form :model="form">
-        <el-form-item label="一级分类" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="一级分类" :label-width="formLabelWidth" prop="first_cateid">
           <el-select v-model="form.first_cateid" @change="changefirst">
             <el-option label="---请选择---" value disabled></el-option>
             <el-option
@@ -14,7 +13,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" :label-width="formLabelWidth">
+        <el-form-item label="二级分类" :label-width="formLabelWidth" prop="second_cateid">
           <el-select v-model="form.second_cateid">
             <el-option label="---请选择---" value disabled></el-option>
             <el-option
@@ -25,16 +24,16 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品名称" :label-width="formLabelWidth">
+        <el-form-item label="商品名称" :label-width="formLabelWidth" prop="goodsname">
           <el-input v-model="form.goodsname" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="价格" :label-width="formLabelWidth">
+        <el-form-item label="价格" :label-width="formLabelWidth" prop="price">
           <el-input v-model="form.price" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="市场价格" :label-width="formLabelWidth">
+        <el-form-item label="市场价格" :label-width="formLabelWidth" prop="market_price">
           <el-input v-model="form.market_price" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item v-if="form.pid!==0" label="图片" :label-width="formLabelWidth">
+        <el-form-item  label="图片" :label-width="formLabelWidth" >
           <el-upload
             class="avatar-uploader"
             action="#"
@@ -45,7 +44,7 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="商品规格" :label-width="formLabelWidth">
+        <el-form-item label="商品规格" :label-width="formLabelWidth" prop="specsid">
           <el-select v-model="form.specsid" @change="changeSpec">
             <el-option label="---请选择---" value disabled></el-option>
             <el-option
@@ -56,7 +55,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="规格属性" :label-width="formLabelWidth">
+        <el-form-item label="规格属性" :label-width="formLabelWidth" prop="specsattr">
           <el-select v-model="form.specsattr" multiple>
             <el-option label="---请选择---" value disabled></el-option>
             <el-option v-for="item in specsattrs" :key="item" :label="item" :value="item"></el-option>
@@ -129,6 +128,29 @@ export default {
       value: "100",
       secondcate: [],
       specsattrs: [],
+      rules: {
+         first_cateid: [
+            { required: true, message: '请选择一级分类', trigger: 'change' },
+            ],
+        second_cateid: [
+            { required: true, message: '请选择二级分类', trigger: 'change' },
+            ],
+          goodsname: [
+            { required: true, message: '请输入商品名称', trigger: 'blur' },
+          ],
+          price: [
+            { required: true, message: '请输入价格', trigger: 'blur' },
+          ],
+          market_price: [
+            { required: true, message: '请输入市场价格', trigger: 'blur' },
+          ],
+          specsid: [
+            { required: true, message: '请选择商品规格', trigger: 'change' },
+          ],
+          specsattr: [
+            {type:"array", required: true, message: '请选择规格属性', trigger: 'change' },
+          ],
+      }
     };
   },
   mounted() {
@@ -209,32 +231,91 @@ export default {
         ishot: 1,
         status: 1,
       };
-      this.imageUrl="http://localhost:3000null"
+      this.imageUrl = "http://localhost:3000null";
     },
     cancel() {
       this.$emit("cancel");
     },
-    add() {
-      // 取出富文本的编辑器的内容，赋值给form
-      this.form.description = this.editor.txt.html();
-      let data = {
-        ...this.form,
-        specsattr: JSON.stringify(this.form.specsattr),
-      };
-      reqGManAdd(data).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("添加成功");
-          this.empty();
-          this.reqGmanlist();
-          this.reqtotal();
-        } else {
-          errAlert(res.data.msg);
+    // 表单验证
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.first_cateid === "") {
+          errAlert("请选择上级分类");
+          return;
         }
+        if (this.form.second_cateid === "") {
+          errAlert("请选择二级分类");
+          return;
+        }
+        if (this.form.goodsname === "") {
+          errAlert("请填写商品名称");
+          return;
+        }
+        if (this.form.price === "") {
+          errAlert("请输入价格");
+          return;
+        }
+
+        if (!/((^[1-9]\d*)|^0)(\.\d{0,2}){0,1}$/.test(this.form.price)) {
+          errAlert("请正确输入价格");
+          return;
+        }
+
+        if (this.form.market_price === "") {
+          errAlert("请输入市场价格");
+          return;
+        }
+
+        if (!/((^[1-9]\d*)|^0)(\.\d{0,2}){0,1}$/.test(this.form.market_price)) {
+          errAlert("请正确输入市场价格");
+          return;
+        }
+
+        if (this.imageUrl === "http://localhost:3000null") {
+          errAlert("请插入图片");
+          return;
+        }
+
+        if(this.form.specsid===""){
+          errAlert("请选择商品规格")
+          return;
+        }
+
+        if(this.form.specsattr.length===0){
+           errAlert("请选择规格属性")
+           return
+        }
+
+        if(this.editor.txt.html()===""){
+          errAlert("请填写商品的描述")
+          return;
+        }
+
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        // 取出富文本的编辑器的内容，赋值给form
+        this.form.description = this.editor.txt.html();
+        let data = {
+          ...this.form,
+          specsattr: JSON.stringify(this.form.specsattr),
+        };
+        reqGManAdd(data).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("添加成功");
+            this.empty();
+            this.reqGmanlist();
+            this.reqtotal();
+          } else {
+            errAlert(res.data.msg);
+          }
+        });
       });
     },
     getinfo(id) {
-      console.log(id);
       reqGManinfo(id).then((res) => {
         if (res.data.code == 200) {
           // 把商品规格属性转换为对象数组形式
@@ -261,18 +342,20 @@ export default {
       });
     },
     updata() {
-      this.form.description = this.editor.txt.html();
-      let data = {
-        ...this.form,
-        specsattr: JSON.stringify(this.form.specsattr),
-      };
-      reqGManUpdate(data).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.reqGmanlist();
-          this.reqtotal();
-        }
+      this.check().then(() => {
+        this.form.description = this.editor.txt.html();
+        let data = {
+          ...this.form,
+          specsattr: JSON.stringify(this.form.specsattr),
+        };
+        reqGManUpdate(data).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.reqGmanlist();
+            this.reqtotal();
+          }
+        });
       });
     },
   },

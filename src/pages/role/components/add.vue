@@ -1,11 +1,11 @@
 <template>
   <div>
     <el-dialog :title="addcon.isAdd?'角色添加':'角色编辑'" :visible.sync="addcon.isshow">
-      <el-form :model="form">
-        <el-form-item label="角色名称" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="角色名称" :label-width="formLabelWidth" prop="rolename">
           <el-input v-model="form.rolename" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色权限" :label-width="formLabelWidth">
+        <el-form-item label="角色权限" :label-width="formLabelWidth" >
           <el-tree
             :data="rolePer"
             show-checkbox
@@ -15,7 +15,7 @@
             :expand-on-click-node="false"
           >
             <span class="custom-tree-node" slot-scope="{ data}">
-              <span>{{data.title }}</span>
+              <span>{{data.title}}</span>
             </span>
           </el-tree>
         </el-form-item>
@@ -43,6 +43,7 @@
 <script>
 import { reqRoleAdd, reqRoleInfo, reqRoleUpdata } from "../../../utils/http";
 import { infoAlert, successAlert, errAlert } from "../../../utils/alert";
+import { mapActions, mapGetters } from "vuex";
 export default {
   props: ["addcon", "rolePer"],
   data() {
@@ -54,9 +55,23 @@ export default {
       },
       formLabelWidth: "120px",
       value: "100",
+      rules: {
+        rolename: [
+          { required: true, message: "请输入角色名称", trigger: "blur" },
+        ],
+        
+      },
     };
   },
+  computed: {
+    ...mapGetters({
+      list: "list",
+    }),
+  },
   methods: {
+    ...mapActions({
+      changelist: "changelist",
+    }),
     // 清空
     empty() {
       this.form = {
@@ -66,8 +81,8 @@ export default {
       };
     },
     // 设置角色权限
-    setCK(arr) {
-      this.form = this.$refs.tree.setCheckedKeys(arr);
+    setCK(arr){
+      this.$refs.tree.setCheckedKeys(arr); 
     },
     // 表单验证
     check() {
@@ -80,6 +95,7 @@ export default {
           errAlert("请选择角色权限");
           return;
         }
+
         resolve();
       });
     },
@@ -119,6 +135,13 @@ export default {
         this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
         reqRoleUpdata(this.form).then((res) => {
           if (res.data.code == 200) {
+            // 如果修改的角色是当前用户所属的角色，就需要退出登录，重新登录
+            if (this.form.id == this.list.roleid) {
+              successAlert("修改成功");
+              this.changelist({});
+              this.$router.push("/login");
+              return;
+            }
             this.cancel();
             successAlert("修改成功");
             this.$emit("init");

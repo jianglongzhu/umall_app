@@ -1,18 +1,15 @@
 <template>
   <div class="box">
-    <el-dialog :title="addcon.isAdd?'商品分类添加':'商品分类编辑'" :visible.sync="addcon.isshow">
-      <el-form :model="form">
-        <el-form-item label="上级分类" :label-width="formLabelWidth">
+    <el-dialog :title="addcon.isAdd?'商品分类添加':'商品分类编辑'" :visible.sync="addcon.isshow" >
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="上级分类" :label-width="formLabelWidth" prop="pid">
           <el-select v-model="form.pid">
-            <el-option label="---请选择---" value disabled></el-option>
+            <el-option value="" label="----请选择----" disabled></el-option>
             <el-option label="顶级分类" :value="0"></el-option>
-            <div v-for="item in list" :key="item.id">
-              <el-option :label="item.catename" :value="item.id"></el-option>
-              <el-option v-for="i in item.children" :key="i.id" :label="i.catename" :value="i.id"></el-option>
-            </div>
+              <el-option v-for="item in list" :key="item.id" :label="item.catename" :value="item.id"></el-option>      
           </el-select>
         </el-form-item>
-        <el-form-item label="分类名称" :label-width="formLabelWidth">
+        <el-form-item label="分类名称" :label-width="formLabelWidth" prop="catename">
           <el-input v-model="form.catename" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item v-if="form.pid!==0" label="图片" :label-width="formLabelWidth">
@@ -62,7 +59,7 @@ export default {
       dialogFormVisible: true,
       imageUrl: "http://localhost:3000null",
       form: {
-        pid: 0,
+        pid: "",
         catename: "",
         img: null,
         status: 2,
@@ -70,6 +67,14 @@ export default {
       formLabelWidth: "120px",
       icons: ["el-icon-s-tools", "el-icon-camera-solid", "el-icon-s-shop"],
       value: "100",
+       rules: {
+         pid: [
+            { required: true, message: '请选择上级分类', trigger: 'change' }
+          ],
+          catename: [
+            { required: true, message: '请输入分类名称', trigger: 'blur' }
+          ],
+      }
     };
   },
   computed: {
@@ -107,23 +112,39 @@ export default {
     //清空
     empty() {
       (this.form = {
-        pid: 0,
+        pid: "",
         catename: "",
         img: null,
         status: 2,
       }),
         (this.imageUrl = "http://localhost:3000null");
     },
-    
+    // 表单验证
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.pid === "") {
+          errAlert("请选择上级分类");
+          return;
+        }
+
+        if (this.form.catename === "") {
+          errAlert("请填写分类名称");
+          return;
+        }
+        resolve();
+      });
+    },
     //添加
     add() {
-         reqGoodAdd(this.form).then((res) => {
+      this.check().then(() => {
+        reqGoodAdd(this.form).then((res) => {
           if (res.data.code == 200) {
             this.cancel();
             successAlert(res.data.msg);
             this.empty();
             this.reqlist();
           }
+        });
       });
     },
     //获取一条的信息
@@ -139,12 +160,14 @@ export default {
     },
     //编辑
     edit() {
-      reqGoodUpdata(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.reqlist();
-        }
+      this.check().then(() => {
+        reqGoodUpdata(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.reqlist();
+          }
+        });
       });
     },
   },

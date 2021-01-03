@@ -1,8 +1,8 @@
 <template>
   <div class="box">
     <el-dialog :title="addcon.isAdd?'活动添加':'活动修改'" :visible.sync="addcon.isshow" @closed="close">
-      <el-form :model="form">
-        <el-form-item label="活动名称" :label-width="formLabelWidth">
+      <el-form :model="form" :rules="rules" v-if="addcon.isshow">
+        <el-form-item label="活动名称" :label-width="formLabelWidth" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="活动期限" :label-width="formLabelWidth">
@@ -18,7 +18,7 @@
             ></el-date-picker>
           </div>
         </el-form-item>
-        <el-form-item label="一级分类" :label-width="formLabelWidth">
+        <el-form-item label="一级分类" :label-width="formLabelWidth" prop="first_cateid">
           <el-select v-model="form.first_cateid" @change="changefirst" placeholder="请选择分类">
             <el-option
               v-for="item in catelist"
@@ -28,7 +28,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" :label-width="formLabelWidth">
+        <el-form-item label="二级分类" :label-width="formLabelWidth" prop="second_cateid">
           <el-select v-model="form.second_cateid" placeholder="请选择分类" @change="changesecond">
             <el-option
               v-for="item in secondcate"
@@ -38,7 +38,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品" :label-width="formLabelWidth">
+        <el-form-item label="商品" :label-width="formLabelWidth" prop="goodsid">
           <el-select v-model="form.goodsid" placeholder="请选择商品">
             <el-option
               v-for="item in goodslist"
@@ -68,7 +68,6 @@
     </el-dialog>
   </div>
 </template>
-
 <script>
 import {
   reqSekillAdd,
@@ -99,6 +98,21 @@ export default {
       value: "100",
       secondcate: [],
       goodslist: [],
+      rules: {
+          title: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' },
+          ],
+          first_cateid:[
+            { required: true, message: '请选择一级分类', trigger: 'change' },
+          ],
+          second_cateid:[
+            { required: true, message: '请选择二级分类', trigger: 'change' },
+          ],
+          goodsid:[
+            { required: true, message: '请选择商品', trigger: 'change' },
+          ],
+
+      }
     };
   },
   mounted() {
@@ -120,7 +134,7 @@ export default {
       reqlist: "seskill/reqList",
     }),
     // 关闭对话框时间清空
-    close(){
+    close() {
       // 当为编辑的时候清空时间对话框
       if (this.addcon.isAdd == false) {
         this.timearr = [];
@@ -129,6 +143,9 @@ export default {
     // 时间戳获取
     changetime() {
       // 赋值给开始时间和结束时间
+      if(this.timearr==null){
+          return;
+      }
       this.form.begintime = this.timearr[0];
       this.form.endtime = this.timearr[1];
     },
@@ -178,16 +195,44 @@ export default {
     cancel() {
       this.$emit("cancel");
     },
-    add() {
-      reqSekillAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("添加成功");
-          this.empty();
-          this.reqlist();
-        } else {
-          errAlert(res.data.msg);
+    //  表单验证
+    check() {
+      return new Promise((resolve) => {
+        if (this.form.title === "") {
+          errAlert("请填写活动名称");
+          return;
         }
+        if (this.timearr==null || this.timearr.length===0) {
+          errAlert("请选择活动期限");
+          return;
+        }
+        if (this.form.first_cateid === "") {
+          errAlert("请选择一级分类");
+          return;
+        }
+        if (this.form.second_cateid === "") {
+          errAlert("请选择二级分类");
+          return;
+        }
+        if (this.form.goodsid === "") {
+          errAlert("请选择商品");
+          return;
+        }
+        resolve();
+      });
+    },
+    add() {
+      this.check().then(() => {
+        reqSekillAdd(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("添加成功");
+            this.empty();
+            this.reqlist();
+          } else {
+            errAlert(res.data.msg);
+          }
+        });
       });
     },
     getinfo(id) {
@@ -208,12 +253,14 @@ export default {
       });
     },
     updata() {
-      reqSekillUpdata(this.form).then((res) => {
-        if (res.data.code == 200) {
-          this.cancel();
-          successAlert("修改成功");
-          this.reqlist();
-        }
+      this.check().then(() => {
+        reqSekillUpdata(this.form).then((res) => {
+          if (res.data.code == 200) {
+            this.cancel();
+            successAlert("修改成功");
+            this.reqlist();
+          }
+        });
       });
     },
   },
